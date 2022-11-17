@@ -1,6 +1,7 @@
 package com.example.reactivewebexample.base.document;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.annotation.*;
@@ -12,9 +13,11 @@ import java.time.LocalDateTime;
 @Getter
 public class BaseField {
     @CreatedDate
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime updatedAt;
 
     @Version
