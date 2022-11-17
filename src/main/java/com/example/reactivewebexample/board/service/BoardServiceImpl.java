@@ -5,6 +5,7 @@ import com.example.reactivewebexample.board.dto.BoardDto;
 import com.example.reactivewebexample.board.dto.UpdateBoardDto;
 import com.example.reactivewebexample.board.repository.BoardRepository;
 import com.example.reactivewebexample.common.dto.ModifyDto;
+import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -32,9 +33,14 @@ public class BoardServiceImpl implements BoardService {
         return boardRepository.findById(boardId)
             .switchIfEmpty(Mono.error(new RuntimeException("게시글 정보가 없습니다.")))
             .map(board -> {
+                Integer version = board.getBaseField().getVersion();
                 board.updateBoard(boardDto.title(), boardDto.content());
+                board.getBaseField().setUpdatedAt(LocalDateTime.now());
+                board.getBaseField().setVersion(version + 1);
+
                 return board;
             })
+            .flatMap(boardRepository::save)
             .flatMap(board -> ModifyDto.toMono(board.getId(), boardDto));
     }
 }

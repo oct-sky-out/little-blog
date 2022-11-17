@@ -25,4 +25,16 @@ public class BaseField {
 
     @Field("isDeleted")
     private int isDeleted;
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    public void setIsDeleted(int isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 }
