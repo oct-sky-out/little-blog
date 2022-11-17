@@ -1,12 +1,16 @@
 package com.example.reactivewebexample.board.controller;
 
-import com.example.reactivewebexample.board.document.Board;
 import com.example.reactivewebexample.board.dto.BoardDto;
+import com.example.reactivewebexample.board.dto.UpdateBoardDto;
 import com.example.reactivewebexample.board.service.BoardService;
+import com.example.reactivewebexample.common.dto.CreationDto;
+import com.example.reactivewebexample.common.dto.ModifyDto;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,23 +26,18 @@ public class BoardController {
     @GetMapping
     public Flux<BoardDto> retrieveBoard() {
         return boardService.findBoards()
-                .flatMap(this::wrapBoardDto);
-
+                .flatMap(BoardDto::toFlux);
     }
 
     @PostMapping
-    public Mono<Board> createBoard(@RequestBody @Valid BoardDto boardDto) {
-        return boardService.createBoard(boardDto);
+    public Mono<CreationDto> createBoard(@RequestBody @Valid BoardDto boardDto) {
+        return boardService.createBoard(boardDto)
+            .flatMap(board -> CreationDto.toMono(board.getId()));
     }
 
-    private Flux<BoardDto> wrapBoardDto(Board board) {
-        return Flux.just(BoardDto
-            .builder()
-            .id(board.getId())
-            .title(board.getTitle())
-            .content(board.getContent())
-            .createdAt(board.getBaseField().getCreatedAt())
-            .updatedAt(board.getBaseField().getUpdatedAt())
-            .build());
+    @PutMapping("/{boardId}")
+    public Mono<ModifyDto<UpdateBoardDto>> updateBoard(@RequestBody @Valid UpdateBoardDto boardDto,
+                                               @PathVariable("boardId") String boardId) {
+        return boardService.updateBoard(boardId, boardDto);
     }
 }
