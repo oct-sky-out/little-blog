@@ -1,0 +1,30 @@
+# see https://docs.docker.com/compose/compose-file/compose-versioning/
+version: "3.8" # specify docker-compose version, v3.5 is compatible with docker 17.12.0+
+
+# Define the services/containers to be run
+services:
+    postgresql:
+        image: postgres
+        container_name: postgres
+        restart: always
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_PASSWORD: password
+            POSTGRES_USER: user
+        volumes:
+            - ./data/postgresql:/var/lib/postgresql
+                #     - ./pg-initdb.d:/docker-entrypoint-initdb.d
+
+    mongodb:
+        image: mongo
+        container_name: mdb
+        restart : always
+        ports:
+            - 27016:27017
+        volumes:
+            - ./mongodb:/data/db
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=1234
+            - MONGO_INITDB_DATABASE=my-blog
