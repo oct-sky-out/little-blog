@@ -8,6 +8,7 @@ import com.example.reactivewebexample.common.dto.ModifyDto;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,17 +17,20 @@ import reactor.core.publisher.Mono;
 public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
 
+    @Transactional(readOnly = true)
     @Override
     public Flux<Board> findBoards() {
         return boardRepository.findAll()
             .filter(board -> board.getBaseField().getIsDeleted() != 1);
     }
 
+    @Transactional
     @Override
     public Mono<Board> createBoard(BoardDto boardDto) {
         return boardRepository.insert(boardDto.parseBoard());
     }
 
+    @Transactional
     @Override
     public Mono<ModifyDto<UpdateBoardDto>> updateBoard(String boardId, UpdateBoardDto boardDto) {
         return boardRepository.findById(boardId)
@@ -43,6 +47,7 @@ public class BoardServiceImpl implements BoardService {
             .flatMap(board -> ModifyDto.toMono(board.getId(), boardDto));
     }
 
+    @Transactional
     @Override
     public Mono<Void> deleteBoard(String boardId) {
         return boardRepository.findById(boardId)

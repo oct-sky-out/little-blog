@@ -2,3 +2,13 @@ spring:
   data:
     mongodb:
       uri: mongodb://root:1234@127.0.0.1:27016/my-blog
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb:
+            core:
+              MongoTemplate: DEBUG
+    root: debug
