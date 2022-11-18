@@ -4,8 +4,10 @@ import com.example.reactivewebexample.board.document.Board;
 import com.example.reactivewebexample.board.repository.BoardRepository;
 import com.example.reactivewebexample.comment.dto.CommentCreationDto;
 import com.example.reactivewebexample.comment.dto.CommentDto;
+import com.example.reactivewebexample.comment.dto.UpdateCommentDto;
 import com.example.reactivewebexample.comment.repository.CommentRepository;
 import com.example.reactivewebexample.common.dto.CreationDto;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,4 +40,20 @@ public class CommentServiceImpl implements CommentService {
             .flatMap(commentRepository::save)
             .flatMap(comment -> CreationDto.toMono(comment.getId()));
     }
+
+    @Override
+    public Mono<UpdateCommentDto> updateComment(String commentId, UpdateCommentDto updateCommentDto) {
+        return commentRepository.findById(commentId)
+            .flatMap(comment -> {
+                Integer version = comment.getBaseField().getVersion();
+
+                comment.setContent(updateCommentDto.content());
+                comment.getBaseField().setUpdatedAt(LocalDateTime.now());
+                comment.getBaseField().setVersion(++version);
+                return Mono.just(comment);
+            })
+            .flatMap(commentRepository::save)
+            .thenReturn(updateCommentDto);
+    }
+
 }

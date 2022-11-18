@@ -36,4 +36,8 @@ public class Comment {
     public void setBoard(Board board) {
         this.board = board;
     }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
 }
