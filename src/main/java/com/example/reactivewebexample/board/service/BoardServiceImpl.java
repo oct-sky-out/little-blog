@@ -6,21 +6,20 @@ import com.example.reactivewebexample.board.dto.UpdateBoardDto;
 import com.example.reactivewebexample.board.repository.BoardRepository;
 import com.example.reactivewebexample.common.dto.ModifyDto;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
 
-    public BoardServiceImpl(BoardRepository boardRepository) {
-        this.boardRepository = boardRepository;
-    }
-
     @Override
     public Flux<Board> findBoards() {
-        return boardRepository.findAll();
+        return boardRepository.findAll()
+            .filter(board -> board.getBaseField().getIsDeleted() != 1);
     }
 
     @Override
@@ -42,5 +41,14 @@ public class BoardServiceImpl implements BoardService {
             })
             .flatMap(boardRepository::save)
             .flatMap(board -> ModifyDto.toMono(board.getId(), boardDto));
+    }
+
+    @Override
+    public Mono<Void> deleteBoard(String boardId) {
+        return boardRepository.findById(boardId)
+            .switchIfEmpty(Mono.error(new RuntimeException("게시글이 존재하지 않습니다.")))
+            .map(Board::deleteBoard)
+            .flatMap(boardRepository::save)
+            .then();
     }
 }

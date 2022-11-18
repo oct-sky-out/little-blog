@@ -37,4 +37,9 @@ public class Board {
         this.content = content;
     }
 
+    public Board deleteBoard() {
+        this.getBaseField().setIsDeleted(1);
+
+        return this;
+    }
 }

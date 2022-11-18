@@ -13,4 +13,6 @@ public interface BoardService {
     Mono<Board> createBoard(BoardDto boardDto);
 
     Mono<ModifyDto<UpdateBoardDto>> updateBoard(String boardId, UpdateBoardDto boardDto);
+
+    Mono<Void> deleteBoard(String boardId);
 }
