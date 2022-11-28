@@ -27,7 +27,7 @@ public class CommentDto{
 
     public static Flux<CommentDto> convert(Comment comment) {
         return Flux.just(CommentDto.builder()
-                .id(comment.getId())
+                .id(comment.getId().toHexString())
                 .name(comment.getName())
                 .content(comment.getContent())
                 .createdAt(comment.getBaseField().getCreatedAt())

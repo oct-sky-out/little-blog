@@ -7,6 +7,7 @@ import com.example.reactivewebexample.board.repository.BoardRepository;
 import com.example.reactivewebexample.common.dto.ModifyDto;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -33,7 +34,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     @Override
     public Mono<ModifyDto<UpdateBoardDto>> updateBoard(String boardId, UpdateBoardDto boardDto) {
-        return boardRepository.findById(boardId)
+        return boardRepository.findById(new ObjectId(boardId))
             .switchIfEmpty(Mono.error(new RuntimeException("게시글 정보가 없습니다.")))
             .map(board -> {
                 Integer version = board.getBaseField().getVersion();
@@ -44,13 +45,13 @@ public class BoardServiceImpl implements BoardService {
                 return board;
             })
             .flatMap(boardRepository::save)
-            .flatMap(board -> ModifyDto.toMono(board.getId(), boardDto));
+            .flatMap(board -> ModifyDto.toMono(board.getId().toHexString(), boardDto));
     }
 
     @Transactional
     @Override
     public Mono<Void> deleteBoard(String boardId) {
-        return boardRepository.findById(boardId)
+        return boardRepository.findById(new ObjectId(boardId))
             .switchIfEmpty(Mono.error(new RuntimeException("게시글이 존재하지 않습니다.")))
             .map(Board::deleteBoard)
             .flatMap(boardRepository::save)

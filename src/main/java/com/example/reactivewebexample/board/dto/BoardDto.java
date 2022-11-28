@@ -27,7 +27,7 @@ public record BoardDto(
     public static Flux<BoardDto> toFlux(Board board) {
         return Flux.just(BoardDto
             .builder()
-            .id(board.getId())
+            .id(board.getId().toHexString())
             .title(board.getTitle())
             .content(board.getContent())
             .createdAt(board.getBaseField().getCreatedAt())

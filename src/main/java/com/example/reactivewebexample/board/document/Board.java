@@ -3,16 +3,15 @@ package com.example.reactivewebexample.board.document;
 import com.example.reactivewebexample.base.document.BaseField;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Document(collection = "board")
-@NoArgsConstructor
 public class Board {
     @Id
-    private String id;
+    private ObjectId id;
 
     private String title;
 

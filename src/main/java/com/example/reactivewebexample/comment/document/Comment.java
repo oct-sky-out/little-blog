@@ -4,18 +4,17 @@ import com.example.reactivewebexample.base.document.BaseField;
 import com.example.reactivewebexample.board.document.Board;
 import lombok.Builder;
 import lombok.Getter;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-@Document
 @Getter
+@Document
 public class Comment {
     @Id
-    private String id;
+    private ObjectId id;
 
-    @DocumentReference(lazy = true)
-    private Board board;
+    private ObjectId boardId;
 
     private String name;
 
@@ -33,8 +32,8 @@ public class Comment {
         this.baseField = baseField;
     }
 
-    public void setBoard(Board board) {
-        this.board = board;
+    public void setBoardId(Board board) {
+        this.boardId = board.getId();
     }
 
     public void setContent(String content) {

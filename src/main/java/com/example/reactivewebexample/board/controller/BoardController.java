@@ -36,7 +36,7 @@ public class BoardController {
     @PostMapping
     public Mono<CreationDto> createBoard(@RequestBody @Valid BoardDto boardDto) {
         return boardService.createBoard(boardDto)
-            .flatMap(board -> CreationDto.toMono(board.getId()));
+            .flatMap(board -> CreationDto.toMono(board.getId().toHexString()));
     }
 
     @PutMapping("/{boardId}")

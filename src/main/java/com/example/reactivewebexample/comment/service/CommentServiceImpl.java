@@ -7,8 +7,8 @@ import com.example.reactivewebexample.comment.dto.CommentDto;
 import com.example.reactivewebexample.comment.dto.UpdateCommentDto;
 import com.example.reactivewebexample.comment.repository.CommentRepository;
 import com.example.reactivewebexample.common.dto.CreationDto;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -23,33 +23,34 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     @Override
     public Flux<CommentDto> retrieveComments(String boardId) {
-        return commentRepository.findAllByBoardId(boardId)
+        return commentRepository.findAllByBoardId(new ObjectId(boardId))
+            .filter(comment -> comment.getBaseField().getIsDeleted() != 1)
             .flatMap(CommentDto::convert);
     }
 
     @Transactional
     @Override
     public Mono<CreationDto> addComment(String boardId, CommentCreationDto creationDto) {
-        Mono<Board> board = boardRepository.findById(boardId);
+        Mono<Board> board = boardRepository.findById(new ObjectId(boardId));
 
         return Mono.just(creationDto)
-            .map(CommentCreationDto::parseComment)
+            .flatMap(CommentCreationDto::parseComment)
             .flatMap(comment -> board
-                .doOnNext(comment::setBoard)
+                .doOnNext(comment::setBoardId)
                 .thenReturn(comment))
             .flatMap(commentRepository::save)
-            .flatMap(comment -> CreationDto.toMono(comment.getId()));
+            .flatMap(comment -> CreationDto.toMono(comment.getId().toHexString()));
     }
 
     @Override
     public Mono<UpdateCommentDto> updateComment(String commentId, UpdateCommentDto updateCommentDto) {
-        return commentRepository.findById(commentId)
+        return commentRepository.findById(new ObjectId(commentId))
             .flatMap(comment -> {
                 Integer version = comment.getBaseField().getVersion();
 
                 comment.setContent(updateCommentDto.content());
-                comment.getBaseField().setUpdatedAt(LocalDateTime.now());
                 comment.getBaseField().setVersion(++version);
+
                 return Mono.just(comment);
             })
             .flatMap(commentRepository::save)
