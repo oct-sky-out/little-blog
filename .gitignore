@@ -17,6 +17,9 @@ mongodb/**
 # AWS User-specific
 .idea/**/aws.xml
 
+# ignore datasource
+.idea/dataSources.xml
+
 # Generated files
 .idea/**/contentModel.xml
 
