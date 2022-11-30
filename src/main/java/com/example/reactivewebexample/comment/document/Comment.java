@@ -20,15 +20,12 @@ public class Comment {
 
     private String content;
 
-    private String password;
-
-    private BaseField baseField;
+     private BaseField baseField;
 
     @Builder
-    public Comment(String name, String content, String password, BaseField baseField) {
+    public Comment(String name, String content, BaseField baseField) {
         this.name = name;
         this.content = content;
-        this.password = password;
         this.baseField = baseField;
     }
 

@@ -1,6 +1,5 @@
 package com.example.reactivewebexample.comment.controller;
 
-import com.example.reactivewebexample.board.dto.UpdateBoardDto;
 import com.example.reactivewebexample.comment.dto.CommentCreationDto;
 import com.example.reactivewebexample.comment.dto.CommentDto;
 import com.example.reactivewebexample.comment.dto.UpdateCommentDto;

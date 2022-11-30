@@ -1,6 +1,7 @@
 package com.example.reactivewebexample.board.dto;
 
 import com.example.reactivewebexample.base.document.BaseField;
+import com.example.reactivewebexample.base.util.BaseFieldFactory;
 import com.example.reactivewebexample.board.document.Board;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
@@ -36,12 +37,7 @@ public record BoardDto(
     }
 
     public Board parseBoard() {
-        BaseField baseField = BaseField.builder()
-            .createdAt(LocalDateTime.now())
-            .updatedAt(null)
-            .isDeleted(0)
-            .version(1)
-            .build();
+        BaseField baseField = BaseFieldFactory.create();
 
         return Board.builder()
             .title(this.title)
