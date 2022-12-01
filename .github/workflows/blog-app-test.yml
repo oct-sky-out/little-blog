@@ -13,8 +13,7 @@ on:
       - main
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
