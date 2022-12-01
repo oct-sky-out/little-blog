@@ -11,10 +11,10 @@ import reactor.netty.http.client.HttpClient;
 
 @Configuration
 public class WebclientConfig {
-    @Value("#{${user.baseurl}}")
+    @Value("${user.baseurl}")
     private String baseurl;
 
-    @Value("#{${user.port}}")
+    @Value("${user.port}")
     private int port;
 
     @Bean

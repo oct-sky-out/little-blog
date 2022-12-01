@@ -3,6 +3,7 @@ package com.example.reactivewebexample.config;
 import com.example.reactivewebexample.base.document.BaseField;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.ReactiveAuditorAware;
@@ -17,6 +18,8 @@ import java.time.LocalDateTime;
 @EnableReactiveMongoAuditing
 @EnableReactiveMongoRepositories(basePackages = "com.example.reactivewebexample")
 public class ReactiveMongoEntityConfig extends AbstractReactiveMongoConfiguration {
+    @Value("${mongodb.url}")
+    private String url;
 
     @Bean
     public ReactiveAuditorAware<BaseField> auditorProvider() {
@@ -35,6 +38,6 @@ public class ReactiveMongoEntityConfig extends AbstractReactiveMongoConfiguratio
 
     @Override
     public MongoClient reactiveMongoClient() {
-        return MongoClients.create("mongodb://root:1234@127.0.0.1:27016/my-blog");
+        return MongoClients.create(url);
     }
 }

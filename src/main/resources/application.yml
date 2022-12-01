@@ -1,3 +1,17 @@
+spring :
+  profiles:
+    active: dev
+
+server:
+  port: 8081
+
+---
+spring :
+  config:
+    activate:
+      on-profile: dev
+
+
 logging:
   level:
     org:
@@ -7,3 +21,49 @@ logging:
             core:
               MongoTemplate: DEBUG
     root: debug
+  file:
+    path: ./log
+    name: ./log/main.log
+  pattern:
+    file: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
+    console: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
+
+user:
+  baseurl: http://127.0.0.1/
+  port : 8081
+
+mongodb:
+  url : mongodb://root:1234@127.0.0.1:27016
+
+
+---
+
+spring :
+  config:
+    activate:
+      on-profile: prod
+  output:
+    ansi:
+      enabled: always
+
+logging:
+  level:
+    root: warn
+    web: warn
+  logback:
+    rollingpolicy:
+      max-history: 14
+      file-name-pattern: '/home/ubuntu/log/%d{yyyy-MM-dd}.i.log'
+  file:
+    path: '/home/ubuntu/log'
+    name: '/home/ubuntu/log/main.log'
+  pattern:
+    file: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
+    console: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
+
+#user:
+#  baseurl : 안알려줌
+#  port : 안알려줌
+#
+#mongodb :
+#  url : 안알려줌
