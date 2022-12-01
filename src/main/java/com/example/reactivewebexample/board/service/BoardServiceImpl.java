@@ -5,6 +5,7 @@ import com.example.reactivewebexample.board.dto.BoardDto;
 import com.example.reactivewebexample.board.dto.UpdateBoardDto;
 import com.example.reactivewebexample.board.repository.BoardRepository;
 import com.example.reactivewebexample.common.dto.ModifyDto;
+import com.example.reactivewebexample.likeit.service.LikeItService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
+    private final LikeItService likeItService;
 
     @Transactional(readOnly = true)
     @Override
@@ -28,7 +30,9 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     @Override
     public Mono<Board> createBoard(BoardDto boardDto) {
-        return boardRepository.insert(boardDto.parseBoard());
+        return boardRepository.insert(boardDto.parseBoard())
+            .flatMap(board -> likeItService.initializeBoardLikeIt(board.getId())
+                .thenReturn(board));
     }
 
     @Transactional
