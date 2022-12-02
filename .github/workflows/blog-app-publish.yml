@@ -30,9 +30,55 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
-        arguments: build
+        arguments: test
 
-    - name : turn off running blog application
+    - name : Inject addition text to "application.yml" for Docker production environment
+      shell: bash
+      env:
+        USER_SERVER_IP: ${{ secrets.USER_SERVER_IP }}
+        USER_SERVER_PORT: ${{ secrets.USER_SERVER_PORT }}
+        MONGODB_URL: ${{ secrets.MONGODB_URL }}
+      run : |
+        echo user: >> ./src/application.yml
+        echo "  baseurl: $USER_SERVER_IP" >> ./src/application.yml
+        echo "  port: $USER_SERVER_PORT " >> ./src/application.yml
+        echo  >> ./src/application.yml
+        echo mongodb: >> ./src/application.yml
+        echo "  url: $MONGODB_URL" >> ./src/application.yml
+        echo  >> ./src/application.yml
+        echo --- >> ./src/application.yml
+        echo spring: >> ./src/application.yml
+        echo   profiles:  >> ./src/application.yml
+        echo     active: prod >> ./src/application.yml
+        cat ./src/application.yml
+
+    - name: Build with Gradle
+      uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+      with:
+        arguments: bootBuildImage
+
+    - name: extract version name
+      run: echo "##[set-output name=version;]$(echo '${{ github.event.head_commit.message }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')"
+      id: extract_version_name
+        - name: Release 생성
+          uses: actions/create-release@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GHP_TOKEN }}
+          with:
+            tag_name: ${{ steps.extract_version_name.outputs.version }}
+            release_name: ${{ steps.extract_version_name.outputs.version }}
+
+    - name: Push to GitHub Package
+      uses: opspresso/action-docker@master
+      with:
+        args: --docker
+      env:
+        PASSWORD: ${{ secrets.GHP_TOKEN }}
+        REGISTRY: "ghcr.io/oct-sky-out/blog_app"
+        IMAGE_NAME: "blog_app"
+        TAG_NAME: ${{ steps.extract_version_name.outputs.version }}
+
+    - name: pull newly version blog app
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.BLOG_SSH_IP }}
@@ -40,25 +86,9 @@ jobs:
         key: ${{ secrets.BLOG_SSH_KEY }}
         port: ${{ secrets.BLOG_SSH_PORT }}
         script_stop: true
-        script: "./turn_off_blog.sh"
+        script: ./newly_blog_app_image_pull.sh
 
-    - name: Sleep for 10 seconds
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '10s'
-
-    - name: upload file to Blog server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.BLOG_SSH_IP }}
-        username: ${{ secrets.BLOG_SSH_ID }}
-        key: ${{ secrets.BLOG_SSH_KEY }}
-        port: ${{ secrets.BLOG_SSH_PORT }}
-        source: "build/**/*.jar"
-        target: "~/"
-        rm: false
-
-    - name : execute blog service
+    - name : remove before container and image
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.BLOG_SSH_IP }}
@@ -66,4 +96,24 @@ jobs:
         key: ${{ secrets.BLOG_SSH_KEY }}
         port: ${{ secrets.BLOG_SSH_PORT }}
         script_stop: true
-        script: "./run_blog.sh"
+        script: ./remove_before_container.sh
+
+    - name : execute newly blog_app image version
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.BLOG_SSH_IP }}
+        username: ${{ secrets.BLOG_SSH_ID }}
+        key: ${{ secrets.BLOG_SSH_KEY }}
+        port: ${{ secrets.BLOG_SSH_PORT }}
+        script_stop: true
+        script: ./bootstrap_blog_app_container.sh
+
+    - name : overwirte before version file
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.BLOG_SSH_IP }}
+        username: ${{ secrets.BLOG_SSH_ID }}
+        key: ${{ secrets.BLOG_SSH_KEY }}
+        port: ${{ secrets.BLOG_SSH_PORT }}
+        script_stop: true
+        script: sudo echo ${{ steps.extract_version_name.outputs.version }} > ./before_version.txt
