@@ -48,8 +48,8 @@ jobs:
         echo  >> ./src/application.yml
         echo --- >> ./src/application.yml
         echo spring: >> ./src/application.yml
-        echo   profiles:  >> ./src/application.yml
-        echo     active: prod >> ./src/application.yml
+        echo "  profiles:"  >> ./src/application.yml
+        echo "    active: prod" >> ./src/application.yml
         cat ./src/application.yml
 
     - name: Build and create Docker Image with Gradle
