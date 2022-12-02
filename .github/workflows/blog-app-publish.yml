@@ -27,7 +27,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build with Gradle
+    - name: test with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
         arguments: test
@@ -52,7 +52,7 @@ jobs:
         echo     active: prod >> ./src/application.yml
         cat ./src/application.yml
 
-    - name: Build with Gradle
+    - name: Build and create Docker Image with Gradle
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
         arguments: bootBuildImage
@@ -61,23 +61,24 @@ jobs:
       run: echo "##[set-output name=version;]$(echo '${{ github.event.head_commit.message }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')"
       id: extract_version_name
 
-    - name: Release 생성
+    - name: create release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GHP_TOKEN }}
       with:
         tag_name: ${{ steps.extract_version_name.outputs.version }}
-        release_name: ${{ steps.extract_version_name.outputs.version }}
+        release_name: v${{ steps.extract_version_name.outputs.version }}
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GHP_TOKEN }}
 
     - name: Push to GitHub Package
-      uses: opspresso/action-docker@master
-      with:
-        args: --docker
-      env:
-        PASSWORD: ${{ secrets.GHP_TOKEN }}
-        REGISTRY: "ghcr.io/oct-sky-out/blog_app"
-        IMAGE_NAME: "blog_app"
-        TAG_NAME: ${{ steps.extract_version_name.outputs.version }}
+      shell: bash
+      run: "docker push ghcr.io/oct-sky-out/blog_app:${{ steps.extract_version_name.outputs.version }}"
 
     - name: pull newly version blog app
       uses: appleboy/ssh-action@master
