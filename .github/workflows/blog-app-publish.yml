@@ -90,7 +90,7 @@ jobs:
         key: ${{ secrets.BLOG_SSH_KEY }}
         port: ${{ secrets.BLOG_SSH_PORT }}
         script_stop: true
-        script: ./newly_blog_app_image_pull.sh
+        script: ./newly_blog_app_image_pull.sh ${{ steps.extract_version_name.outputs.version }}
 
     - name : remove before container and image
       uses: appleboy/ssh-action@master
