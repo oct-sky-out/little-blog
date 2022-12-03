@@ -17,6 +17,7 @@ public class BaseField {
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime updatedAt;
 
     @Version
