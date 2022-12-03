@@ -3,9 +3,9 @@ package com.example.reactivewebexample.category.controller;
 import static org.springframework.hateoas.server.reactive.WebFluxLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.reactive.WebFluxLinkBuilder.methodOn;
 
-import com.example.reactivewebexample.category.document.Category;
 import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.service.CategoryService;
+import com.example.reactivewebexample.common.dto.CreationDto;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
@@ -28,7 +28,7 @@ public class CategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<EntityModel<Category>> createCategory(
+    public Mono<EntityModel<CreationDto>> createCategory(
         @RequestBody @Valid CategorySaveDto body) {
 
         CategoryController controller = methodOn(CategoryController.class);

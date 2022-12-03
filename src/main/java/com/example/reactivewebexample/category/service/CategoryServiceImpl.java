@@ -2,6 +2,7 @@ package com.example.reactivewebexample.category.service;
 
 import com.example.reactivewebexample.category.document.Category;
 import com.example.reactivewebexample.category.repository.CategoryRepository;
+import com.example.reactivewebexample.common.dto.CreationDto;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -13,8 +14,9 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Override
-    public Mono<Category> addCategory(String categoryName) {
-        return categoryRepository.insert(new Category(categoryName));
+    public Mono<CreationDto> addCategory(String categoryName) {
+        return categoryRepository.insert(new Category(categoryName))
+            .flatMap(category -> Mono.just(new CreationDto(category.getId().toHexString())));
     }
 
     @Override

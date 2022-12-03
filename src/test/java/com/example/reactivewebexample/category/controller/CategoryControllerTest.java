@@ -8,6 +8,7 @@ import com.example.reactivewebexample.category.document.Category;
 import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.service.CategoryService;
 import com.example.reactivewebexample.category.service.CategoryServiceImpl;
+import com.example.reactivewebexample.common.dto.CreationDto;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +41,7 @@ class CategoryControllerTest {
         ReflectionTestUtils.setField(testCategory, "id", oid);
 
         given(service.addCategory(anyString()))
-            .willReturn(Mono.just(testCategory));
+            .willReturn(Mono.just(new CreationDto(oid.toHexString())));
 
         WebTestClient.bindToController(controller)
             .build()
@@ -54,9 +55,6 @@ class CategoryControllerTest {
             .expectBody()
             .consumeWith(entityExchangeResult -> log.debug("body: {}", new String(entityExchangeResult.getResponseBody())))
             .jsonPath("$.id", oid.toHexString()).exists()
-            .jsonPath("$.name", testCategory.getName()).exists()
-            .jsonPath("$.baseField", testCategory.getBaseField()).exists()
-            .jsonPath("$.children").doesNotExist()
             .jsonPath("$.links[0].rel", "self").exists()
             .jsonPath("$.links[0].href", "/categories/example").exists()
             .returnResult();
