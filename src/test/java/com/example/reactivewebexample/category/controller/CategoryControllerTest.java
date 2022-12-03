@@ -2,9 +2,10 @@ package com.example.reactivewebexample.category.controller;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.example.reactivewebexample.category.document.Category;
-import com.example.reactivewebexample.category.dto.CategoryCreationDto;
+import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.service.CategoryService;
 import com.example.reactivewebexample.category.service.CategoryServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ class CategoryControllerTest {
             .post()
             .uri("/categories")
             .accept(MediaType.APPLICATION_JSON)
-            .bodyValue(new CategoryCreationDto("example"))
+            .bodyValue(new CategorySaveDto("example"))
             .exchange()
             .expectStatus()
             .isCreated()
@@ -59,5 +60,30 @@ class CategoryControllerTest {
             .jsonPath("$.links[0].rel", "self").exists()
             .jsonPath("$.links[0].href", "/categories/example").exists()
             .returnResult();
+    }
+
+    @Test
+    @DisplayName("카테고리 수정요청을 받아야한다.")
+    void 카테고리_수정_요청을_받아들인다() {
+        ObjectId oid = new ObjectId();
+
+        given(service.updateCategory(oid.toHexString(), "replaceName"))
+            .willReturn(Mono.empty());
+
+        WebTestClient.bindToController(controller)
+            .build()
+            .put()
+            .uri("/categories/" + oid.toHexString())
+            .accept(MediaType.APPLICATION_JSON)
+            .bodyValue(new CategorySaveDto("replaceName"))
+            .exchange()
+            .expectStatus()
+            .isNoContent()
+            .expectBody()
+            .returnResult();
+
+        then(service)
+            .should()
+            .updateCategory(oid.toHexString(), "replaceName");
     }
 }
