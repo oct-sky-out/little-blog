@@ -57,10 +57,3 @@ logging:
   pattern:
     file: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
     console: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
-
-#user:
-#  baseurl : 안알려줌
-#  port : 안알려줌
-#
-#mongodb :
-#  url : 안알려줌
