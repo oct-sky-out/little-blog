@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.example.reactivewebexample.category.document.Category;
 import com.example.reactivewebexample.category.repository.CategoryRepository;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -40,5 +42,23 @@ class CategoryServiceTest {
             .expectSubscription()
             .expectNextMatches(category1 -> category1.equals(categoryTestObj))
             .verifyComplete();
+    }
+
+    @Test
+    void 카테고리를_수정한다() {
+        String categoryName = "example";
+        Category categoryTestObj = new Category(categoryName);
+        ObjectId oid = new ObjectId();
+
+        ReflectionTestUtils.setField(categoryTestObj, "id", oid);
+
+        given(repository.findById(oid))
+            .willReturn(Mono.just(categoryTestObj));
+
+        Mono<Void> updated = service.updateCategory(oid.toHexString(), "replaceName");
+
+        StepVerifier.create(updated).
+            expectErrorMatches(throwable -> throwable instanceof NullPointerException)
+            .verify();
     }
 }

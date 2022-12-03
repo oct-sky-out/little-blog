@@ -5,4 +5,6 @@ import reactor.core.publisher.Mono;
 
 public interface CategoryService {
     Mono<Category> addCategory(String categoryName);
+
+    Mono<Void> updateCategory(String categoryId, String replaceName);
 }
