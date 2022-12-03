@@ -2,6 +2,7 @@ package com.example.reactivewebexample.category.document;
 
 import com.example.reactivewebexample.base.document.BaseField;
 import com.example.reactivewebexample.base.util.BaseFieldFactory;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import lombok.Builder;
@@ -51,5 +52,11 @@ public class Category {
     @Override
     public int hashCode() {
         return Objects.hash(getId());
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        this.baseField.setUpdatedAt(LocalDateTime.now());
+        this.baseField.setVersion(this.baseField.getVersion() + 1);
     }
 }

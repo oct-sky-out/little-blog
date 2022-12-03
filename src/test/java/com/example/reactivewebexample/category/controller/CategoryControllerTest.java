@@ -2,11 +2,13 @@ package com.example.reactivewebexample.category.controller;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.example.reactivewebexample.category.document.Category;
-import com.example.reactivewebexample.category.dto.CategoryCreationDto;
+import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.service.CategoryService;
 import com.example.reactivewebexample.category.service.CategoryServiceImpl;
+import com.example.reactivewebexample.common.dto.CreationDto;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -39,25 +41,47 @@ class CategoryControllerTest {
         ReflectionTestUtils.setField(testCategory, "id", oid);
 
         given(service.addCategory(anyString()))
-            .willReturn(Mono.just(testCategory));
+            .willReturn(Mono.just(new CreationDto(oid.toHexString())));
 
         WebTestClient.bindToController(controller)
             .build()
             .post()
             .uri("/categories")
             .accept(MediaType.APPLICATION_JSON)
-            .bodyValue(new CategoryCreationDto("example"))
+            .bodyValue(new CategorySaveDto("example"))
             .exchange()
             .expectStatus()
             .isCreated()
             .expectBody()
             .consumeWith(entityExchangeResult -> log.debug("body: {}", new String(entityExchangeResult.getResponseBody())))
             .jsonPath("$.id", oid.toHexString()).exists()
-            .jsonPath("$.name", testCategory.getName()).exists()
-            .jsonPath("$.baseField", testCategory.getBaseField()).exists()
-            .jsonPath("$.children").doesNotExist()
             .jsonPath("$.links[0].rel", "self").exists()
             .jsonPath("$.links[0].href", "/categories/example").exists()
             .returnResult();
+    }
+
+    @Test
+    @DisplayName("카테고리 수정요청을 받아야한다.")
+    void 카테고리_수정_요청을_받아들인다() {
+        ObjectId oid = new ObjectId();
+
+        given(service.updateCategory(oid.toHexString(), "replaceName"))
+            .willReturn(Mono.empty());
+
+        WebTestClient.bindToController(controller)
+            .build()
+            .put()
+            .uri("/categories/" + oid.toHexString())
+            .accept(MediaType.APPLICATION_JSON)
+            .bodyValue(new CategorySaveDto("replaceName"))
+            .exchange()
+            .expectStatus()
+            .isNoContent()
+            .expectBody()
+            .returnResult();
+
+        then(service)
+            .should()
+            .updateCategory(oid.toHexString(), "replaceName");
     }
 }
