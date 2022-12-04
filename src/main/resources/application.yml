@@ -8,6 +8,9 @@ spring :
     activate:
       on-profile: dev
 
+  hateoas:
+    use-hal-as-default-json-media-type: true
+
 
 logging:
   level:
@@ -42,6 +45,12 @@ spring :
   output:
     ansi:
       enabled: always
+
+  hateoas:
+    use-hal-as-default-json-media-type: false
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 
 logging:
   level:
