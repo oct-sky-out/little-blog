@@ -6,6 +6,7 @@ import static org.springframework.hateoas.server.reactive.WebFluxLinkBuilder.met
 import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.service.CategoryService;
 import com.example.reactivewebexample.common.dto.CreationDto;
+import com.example.reactivewebexample.common.dto.ModifyDto;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
@@ -36,15 +37,21 @@ public class CategoryController {
         Mono<Link> selfLink = linkTo(controller.createCategory(body)).slash(body.name())
             .withSelfRel().toMono();
 
-        return Mono.zip(categoryService.addCategory(body.name()), selfLink)
-                .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2())));
+        return categoryService.addCategory(body.name())
+            .zipWith(selfLink)
+            .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2())));
     }
 
     @PutMapping("/{categoryId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> updateCategory(@PathVariable String categoryId,
-                                     @RequestBody @Valid CategorySaveDto body) {
-        return categoryService.updateCategory(categoryId, body.name());
+    public Mono<EntityModel<ModifyDto<CategorySaveDto>>> updateCategory(@PathVariable String categoryId,
+                                          @RequestBody @Valid CategorySaveDto body) {
+        CategoryController controller = methodOn(CategoryController.class);
+        Mono<Link> selfLink = linkTo(controller.createCategory(body)).slash(body.name())
+            .withSelfRel().toMono();
+
+        return categoryService.updateCategory(categoryId, body.name())
+            .zipWith(selfLink)
+            .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2())));
     }
 
 }

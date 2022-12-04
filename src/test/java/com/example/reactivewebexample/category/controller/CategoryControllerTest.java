@@ -9,6 +9,7 @@ import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.service.CategoryService;
 import com.example.reactivewebexample.category.service.CategoryServiceImpl;
 import com.example.reactivewebexample.common.dto.CreationDto;
+import com.example.reactivewebexample.common.dto.ModifyDto;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -63,10 +64,14 @@ class CategoryControllerTest {
     @Test
     @DisplayName("카테고리 수정요청을 받아야한다.")
     void 카테고리_수정_요청을_받아들인다() {
+        Category testCategory = new Category("example");
         ObjectId oid = new ObjectId();
+        ReflectionTestUtils.setField(testCategory, "id", oid);
+
 
         given(service.updateCategory(oid.toHexString(), "replaceName"))
-            .willReturn(Mono.empty());
+            .willReturn(
+                ModifyDto.toMono(oid.toHexString(), new CategorySaveDto(testCategory.getName())));
 
         WebTestClient.bindToController(controller)
             .build()
@@ -76,8 +81,13 @@ class CategoryControllerTest {
             .bodyValue(new CategorySaveDto("replaceName"))
             .exchange()
             .expectStatus()
-            .isNoContent()
+            .isOk()
             .expectBody()
+            .consumeWith(entityExchangeResult -> log.debug("body: {}", new String(entityExchangeResult.getResponseBody())))
+            .jsonPath("$.id", oid.toHexString()).exists()
+            .jsonPath("$.diff.name", "replaceName").exists()
+            .jsonPath("$.links[0].rel", "self").exists()
+            .jsonPath("$.links[0].href", "/categories/replaceName").exists()
             .returnResult();
 
         then(service)

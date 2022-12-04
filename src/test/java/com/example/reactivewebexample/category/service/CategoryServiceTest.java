@@ -1,11 +1,15 @@
 package com.example.reactivewebexample.category.service;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import com.example.reactivewebexample.category.document.Category;
+import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.repository.CategoryRepository;
 import com.example.reactivewebexample.common.dto.CreationDto;
+import com.example.reactivewebexample.common.dto.ModifyDto;
+import java.util.Objects;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,17 +56,37 @@ class CategoryServiceTest {
     void 카테고리를_수정한다() {
         String categoryName = "example";
         Category categoryTestObj = new Category(categoryName);
+        Category updatedTestObj = new Category("replaceName");
         ObjectId oid = new ObjectId();
 
         ReflectionTestUtils.setField(categoryTestObj, "id", oid);
+        ReflectionTestUtils.setField(updatedTestObj, "id", oid);
 
-        given(repository.findById(oid))
+        given(repository.findById(any(ObjectId.class)))
             .willReturn(Mono.just(categoryTestObj));
 
-        Mono<Void> updated = service.updateCategory(oid.toHexString(), "replaceName");
+        given(repository.save(categoryTestObj))
+            .willReturn(Mono.just(updatedTestObj));
 
-        StepVerifier.create(updated).
-            expectErrorMatches(throwable -> throwable instanceof NullPointerException)
-            .verify();
+        Mono<ModifyDto<CategorySaveDto>> updated =
+            service.updateCategory(oid.toHexString(), "replaceName")
+            .flatMap(categorySaveDtoModifyDto -> {
+                if(Objects.isNull(categorySaveDtoModifyDto)) {
+                    return Mono.empty();
+                }
+
+                return Mono.just(categorySaveDtoModifyDto);
+
+            });
+
+        StepVerifier.create(updated)
+            .expectSubscription()
+            .assertNext(categorySaveDtoModifyDto -> {
+                assertThat(categorySaveDtoModifyDto.getId()).isEqualTo(oid.toHexString());
+
+                assertThat(categorySaveDtoModifyDto.getDiff())
+                    .isEqualTo(new CategorySaveDto(categoryTestObj.getName()));
+            })
+            .verifyComplete();
     }
 }
