@@ -11,7 +11,10 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/categories")
+@RequestMapping(value="/api/categories", produces = {MediaTypes.HAL_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 public class CategoryController {
     private final CategoryService categoryService;
@@ -54,4 +57,9 @@ public class CategoryController {
             .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2())));
     }
 
+    @PatchMapping("/{categoryId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteCategory(@PathVariable String categoryId) {
+        return categoryService.deleteCategory(categoryId);
+    }
 }
