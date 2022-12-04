@@ -34,4 +34,12 @@ public class CategoryServiceImpl implements CategoryService {
                 category.getId().toHexString(), new CategorySaveDto(category.getName())));
     }
 
+    @Override
+    public Mono<Void> deleteCategory(String categoryId) {
+        return categoryRepository.findById(new ObjectId(categoryId))
+            .switchIfEmpty(Mono.error(new RuntimeException("카테고리가 존재하지 않습니다.")))
+            .flatMap(categoryRepository::delete)
+            .then();
+    }
+
 }

@@ -9,4 +9,6 @@ public interface CategoryService {
     Mono<CreationDto> addCategory(String categoryName);
 
     Mono<ModifyDto<CategorySaveDto>> updateCategory(String categoryId, String replaceName);
+
+    Mono<Void> deleteCategory(String categoryId);
 }
