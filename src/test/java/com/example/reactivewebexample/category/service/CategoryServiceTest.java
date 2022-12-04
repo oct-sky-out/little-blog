@@ -10,6 +10,7 @@ import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.repository.CategoryRepository;
 import com.example.reactivewebexample.common.dto.CreationDto;
 import com.example.reactivewebexample.common.dto.ModifyDto;
+import java.util.List;
 import java.util.Objects;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Disabled;
@@ -21,6 +22,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -134,5 +136,30 @@ class CategoryServiceTest {
     @Disabled
     void 카테고리를_삭제시_자식_카테고리가_있으면_삭제할_수_없다() {
 
+    }
+
+    @Test
+    @DisplayName("카테고리를 모두 조회 할 수 있다.")
+    void 카테고리를_모두_조회한다() {
+        List<Category> testCategories = List.of(new Category("example"),
+            new Category("example1"),
+            new Category("example2"),
+            new Category("example3"),
+            new Category("example4"),
+            new Category("example5"));
+
+        given(repository.findAll())
+            .willReturn(Flux.fromIterable(testCategories));
+
+        Flux<Category> categoryFlux = service.retrieveCategories();
+
+        StepVerifier.create(categoryFlux)
+            .expectSubscription()
+            .expectNextCount(6)
+            .verifyComplete();
+
+        then(repository)
+            .should()
+            .findAll();
     }
 }

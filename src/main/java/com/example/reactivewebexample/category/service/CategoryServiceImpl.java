@@ -8,6 +8,7 @@ import com.example.reactivewebexample.common.dto.ModifyDto;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -40,6 +41,11 @@ public class CategoryServiceImpl implements CategoryService {
             .switchIfEmpty(Mono.error(new RuntimeException("카테고리가 존재하지 않습니다.")))
             .flatMap(categoryRepository::delete)
             .then();
+    }
+
+    @Override
+    public Flux<Category> retrieveCategories() {
+        return categoryRepository.findAll();
     }
 
 }
