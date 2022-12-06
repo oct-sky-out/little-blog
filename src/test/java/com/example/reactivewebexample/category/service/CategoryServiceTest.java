@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import com.example.reactivewebexample.category.document.Category;
 import com.example.reactivewebexample.category.dto.CategorySaveDto;
@@ -162,10 +163,35 @@ class CategoryServiceTest {
         ReflectionTestUtils.setField(testChildCategory, "id", childOid);
         ReflectionTestUtils.setField(testCategory, "id", oid);
         ReflectionTestUtils.setField(testCategory, "id", oid);
+
+        String errorMsg = "자식 카테고리가 존재합니다. 자식 카테고리를 삭제하고 다시 시도해주세요.";
+
         given(repository.findById(oid))
             .willReturn(Mono.just(testCategory));
+        given(repository.countAllChildrenByParentId(oid.toString()))
+            .willReturn(Mono.just(1L));
         given(repository.delete(testCategory))
-            .willReturn(Mono.empty());
+            .willThrow(new RuntimeException(errorMsg));
+
+        Mono<Void> deleted = service.deleteCategory(oid.toHexString());
+
+        StepVerifier.create(deleted)
+            .expectErrorSatisfies(throwable -> {
+                assertThat(throwable).isInstanceOf(RuntimeException.class);
+                assertThat(throwable.getMessage()).isEqualTo(errorMsg);
+            })
+            .log()
+            .verify();
+
+        then(repository)
+            .should(times(1))
+            .findById(oid);
+        then(repository)
+            .should(times(1))
+            .countAllChildrenByParentId(oid.toString());
+        then(repository)
+            .should(times(0))
+            .delete(any());
 
     }
 
