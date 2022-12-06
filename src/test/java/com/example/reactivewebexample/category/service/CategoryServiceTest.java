@@ -48,7 +48,7 @@ class CategoryServiceTest {
         given(repository.insert(any(Category.class)))
             .willReturn(Mono.just(categoryTestObj));
 
-        Mono<CreationDto> category = service.addCategory(categoryName);
+        Mono<CreationDto> category = service.addCategory(categoryName, null);
 
         StepVerifier.create(category)
             .expectSubscription()
@@ -58,8 +58,35 @@ class CategoryServiceTest {
 
     @Test
     @DisplayName("자식카테고리를 생성한다.")
-    @Disabled
     void 자식_카테고리를_생성한다() {
+        String categoryName = "example";
+        String childCategoryName = "child";
+        Category categoryTestObj = new Category(categoryName);
+        Category childCategoryTestObj = new Category(childCategoryName);
+        ObjectId parentOid = new ObjectId();
+        ObjectId childOid = new ObjectId();
+
+        ReflectionTestUtils.setField(categoryTestObj, "id", parentOid);
+        ReflectionTestUtils.setField(childCategoryTestObj, "id", childOid);
+
+        given(repository.findById(any(ObjectId.class)))
+            .willReturn(Mono.just(categoryTestObj));
+        given(repository.insert(any(Category.class)))
+            .willReturn(Mono.just(childCategoryTestObj));
+
+        Mono<CreationDto> category = service.addCategory(childCategoryName, parentOid.toHexString());
+
+        StepVerifier.create(category)
+            .expectSubscription()
+            .expectNextMatches(creationDto -> creationDto.id().equals(childOid.toHexString()))
+            .verifyComplete();
+
+        then(repository)
+            .should()
+            .findById(parentOid);
+        then(repository)
+            .should()
+            .insert(any(Category.class));
     }
 
     @Test

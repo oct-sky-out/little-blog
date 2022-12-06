@@ -35,7 +35,7 @@ class CategoryTest {
         ReflectionTestUtils.setField(category1, "id", oid);
         ReflectionTestUtils.setField(category2, "id", oid);
 
-        assertThatThrownBy(() -> category1.addChild(category2))
+        assertThatThrownBy(() -> category1.addParent(category2))
             .isInstanceOf(RuntimeException.class);
     }
 
@@ -50,6 +50,6 @@ class CategoryTest {
 
         willDoNothing()
             .given(category1)
-            .addChild(category2);
+            .addParent(category2);
     }
 }

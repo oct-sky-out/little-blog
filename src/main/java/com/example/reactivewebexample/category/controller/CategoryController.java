@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
@@ -37,23 +38,26 @@ public class CategoryController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<EntityModel<CreationDto>> createCategory(
-        @RequestBody @Valid CategorySaveDto body) {
-
+        @RequestBody @Valid CategorySaveDto body,
+        @RequestParam(value = "parentId", required = false) String parentId) {
         CategoryController controller = methodOn(CategoryController.class);
-
-        Mono<Link> selfLink = linkTo(controller.createCategory(body)).slash(body.name())
+        Mono<Link> selfLink = linkTo(controller.createCategory(body, parentId)).slash(body.name())
             .withSelfRel().toMono();
+        Mono<Link> updateLink = linkTo(controller.updateCategory(null, null)).slash(body.name())
+            .withSelfRel().toMono();
+        Mono<Link> deleteLink = linkTo(controller.createCategory(null, null)).slash(body.name())
+            .withSelfRel().toMono();
+        Mono<CreationDto> createdCategory = categoryService.addCategory(body.name(), parentId);
 
-        return categoryService.addCategory(body.name())
-            .zipWith(selfLink)
-            .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2())));
+        return Mono.zip(createdCategory, selfLink, updateLink, deleteLink)
+            .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2(), o.getT3(), o.getT4())));
     }
 
     @PutMapping("/{categoryId}")
     public Mono<EntityModel<ModifyDto<CategorySaveDto>>> updateCategory(@PathVariable String categoryId,
                                           @RequestBody @Valid CategorySaveDto body) {
         CategoryController controller = methodOn(CategoryController.class);
-        Mono<Link> selfLink = linkTo(controller.createCategory(body)).slash(body.name())
+        Mono<Link> selfLink = linkTo(controller.createCategory(body, null)).slash(body.name())
             .withSelfRel().toMono();
 
         return categoryService.updateCategory(categoryId, body.name())

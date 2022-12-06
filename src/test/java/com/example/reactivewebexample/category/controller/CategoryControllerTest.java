@@ -43,7 +43,7 @@ class CategoryControllerTest {
         ObjectId oid = new ObjectId();
         ReflectionTestUtils.setField(testCategory, "id", oid);
 
-        given(service.addCategory(anyString())).willReturn(
+        given(service.addCategory("example", null)).willReturn(
             Mono.just(new CreationDto(oid.toHexString())));
 
         WebTestClient.bindToController(controller)
@@ -59,7 +59,11 @@ class CategoryControllerTest {
             .consumeWith(entityExchangeResult -> log.debug("body: {}", new String(entityExchangeResult.getResponseBody())))
             .jsonPath("$.id", oid.toHexString()).exists()
             .jsonPath("$.links[0].rel", "self").exists()
+            .jsonPath("$.links[1].rel", "update").exists()
+            .jsonPath("$.links[2].rel", "delete").exists()
             .jsonPath("$.links[0].href", "/categories/example").exists()
+            .jsonPath("$.links[1].href", "/categories/example").exists()
+            .jsonPath("$.links[2].href", "/categories/example").exists()
             .returnResult();
     }
 
@@ -154,5 +158,40 @@ class CategoryControllerTest {
         then(service)
             .should()
             .retrieveCategories();
+    }
+
+    @Test
+    @DisplayName("자식 카테고리의 생성요청을 받는다.")
+    void 자식_카테고리의_생성요청을_받아들인다() {
+        Category testCategory = new Category("example");
+        ObjectId oid = new ObjectId();
+        ObjectId parentOid = new ObjectId();
+        ReflectionTestUtils.setField(testCategory, "id", oid);
+
+        given(service.addCategory("example", parentOid.toString())).willReturn(
+            Mono.just(new CreationDto(oid.toHexString())));
+
+        WebTestClient.bindToController(controller)
+            .build()
+            .post()
+            .uri(uriBuilder ->
+                uriBuilder.path("/api/categories")
+                    .queryParam("parentId", parentOid.toString())
+                    .build())
+            .contentType(MediaTypes.HAL_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .bodyValue(new CategorySaveDto("example")).exchange()
+            .expectStatus()
+            .isCreated()
+            .expectBody()
+            .consumeWith(entityExchangeResult -> log.debug("body: {}", new String(entityExchangeResult.getResponseBody())))
+            .jsonPath("$.id", oid.toHexString()).exists()
+            .jsonPath("$.links[0].rel", "self").exists()
+            .jsonPath("$.links[1].rel", "update").exists()
+            .jsonPath("$.links[2].rel", "delete").exists()
+            .jsonPath("$.links[0].href", "/categories/example").exists()
+            .jsonPath("$.links[1].href", "/categories/example").exists()
+            .jsonPath("$.links[2].href", "/categories/example").exists()
+            .returnResult();
     }
 }

@@ -3,7 +3,6 @@ package com.example.reactivewebexample.category.document;
 import com.example.reactivewebexample.base.document.BaseField;
 import com.example.reactivewebexample.base.util.BaseFieldFactory;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +20,7 @@ public class Category {
 
     private BaseField baseField;
 
-    private List<Category> children;
+    private ObjectId parentId;
 
     @Builder
     public Category(String name) {
@@ -29,12 +28,12 @@ public class Category {
         this.baseField = BaseFieldFactory.create();
     }
 
-    public void addChild(Category childCategory) {
-        if(this.equals(childCategory)) {
+    public void addParent(Category patentId) {
+        if(this.equals(patentId)) {
             throw new RuntimeException("같은 카테고리는 하위 카테고리로 만들 수 없습니다.");
         }
 
-        this.children.add(childCategory);
+        this.parentId = parentId;
     }
 
     @Override
