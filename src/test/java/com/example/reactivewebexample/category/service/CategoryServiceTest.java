@@ -13,7 +13,6 @@ import com.example.reactivewebexample.common.dto.ModifyDto;
 import java.util.List;
 import java.util.Objects;
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -128,12 +127,6 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("자식 카테고리를 수정한다")
-    @Disabled
-    void 자식_카테고리를_수정한다() {
-    }
-
-    @Test
     @DisplayName("카테고리를 삭제할 수 있다.")
     void 카테고리를_삭제한다() {
         ObjectId oid = new ObjectId();
@@ -160,8 +153,19 @@ class CategoryServiceTest {
 
     @Test
     @DisplayName("카테고리를 삭제시 자식 카테고리가 존재하면 삭제가 불가능하다.")
-    @Disabled
     void 카테고리를_삭제시_자식_카테고리가_있으면_삭제할_수_없다() {
+        ObjectId oid = new ObjectId();
+        ObjectId childOid = new ObjectId();
+        Category testCategory = new Category("example");
+        Category testChildCategory = new Category("example");
+
+        ReflectionTestUtils.setField(testChildCategory, "id", childOid);
+        ReflectionTestUtils.setField(testCategory, "id", oid);
+        ReflectionTestUtils.setField(testCategory, "id", oid);
+        given(repository.findById(oid))
+            .willReturn(Mono.just(testCategory));
+        given(repository.delete(testCategory))
+            .willReturn(Mono.empty());
 
     }
 
