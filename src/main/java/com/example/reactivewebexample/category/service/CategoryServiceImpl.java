@@ -61,9 +61,17 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @Override
     public Mono<Void> deleteCategory(String categoryId) {
+
         return categoryRepository.findById(new ObjectId(categoryId))
             .switchIfEmpty(Mono.error(new RuntimeException("카테고리가 존재하지 않습니다.")))
-            .flatMap(categoryRepository::delete)
+            .zipWith(categoryRepository.countAllChildrenByParentId(categoryId))
+            .flatMap(o -> { // o.T1 = delete category, o.T2 = children count
+                if(o.getT2() > 0) {
+                    return Mono.error(
+                        new RuntimeException("자식 카테고리가 존재합니다. 자식 카테고리를 삭제하고 다시 시도해주세요."));
+                }
+                return categoryRepository.delete(o.getT1());
+            })
             .then();
     }
 
