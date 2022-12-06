@@ -8,7 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface CategoryService {
-    Mono<CreationDto> addCategory(String categoryName);
+    Mono<CreationDto> addCategory(String categoryName, String parentId);
 
     Mono<ModifyDto<CategorySaveDto>> updateCategory(String categoryId, String replaceName);
 

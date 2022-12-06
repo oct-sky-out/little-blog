@@ -43,7 +43,7 @@ class CategoryControllerTest {
         ObjectId oid = new ObjectId();
         ReflectionTestUtils.setField(testCategory, "id", oid);
 
-        given(service.addCategory(anyString())).willReturn(
+        given(service.addCategory(anyString(), null)).willReturn(
             Mono.just(new CreationDto(oid.toHexString())));
 
         WebTestClient.bindToController(controller)
