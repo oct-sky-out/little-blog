@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.hateoas.MediaTypes;
 import com.example.reactivewebexample.category.document.Category;
@@ -23,6 +24,7 @@ import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -115,5 +117,42 @@ class CategoryControllerTest {
         then(service)
             .should()
             .deleteCategory(anyString());
+    }
+
+    @Test
+    @DisplayName("카테고리의 전체조회 요청을 받은 후 처리한다.")
+    void 카테고리_전체조회_요청을_받는다() {
+        List<Category> categories = List.of(new Category("example"),
+            new Category("example1"),
+            new Category("example2"),
+            new Category("example3"),
+            new Category("example4"),
+            new Category("example5"));
+
+        Flux<Category> categoryFlux = Flux.fromIterable(categories);
+
+        given(service.retrieveCategories())
+            .willReturn(categoryFlux);
+
+        categories.forEach(category -> ReflectionTestUtils.setField(category, "id", new ObjectId()));
+
+        WebTestClient.bindToController(controller)
+            .build()
+            .get()
+            .uri("/api/categories")
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .expectBody()
+            .consumeWith(entityExchangeResult -> log.debug("body: {}", new String(entityExchangeResult.getResponseBody())))
+            .jsonPath("$.content").isArray()
+            .jsonPath("$.content[0].name", "example").exists()
+            .jsonPath("$.content[0].links[0].href", "/api/categories/example").exists()
+            .jsonPath("$.links[0].href", "/api/categories").exists()
+            .returnResult();
+
+        then(service)
+            .should()
+            .retrieveCategories();
     }
 }
