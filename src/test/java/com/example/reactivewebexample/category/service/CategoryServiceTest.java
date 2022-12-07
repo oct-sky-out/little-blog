@@ -2,11 +2,14 @@ package com.example.reactivewebexample.category.service;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 import com.example.reactivewebexample.category.document.Category;
+import com.example.reactivewebexample.category.dto.Categories;
+import com.example.reactivewebexample.category.dto.CategoryComposite;
 import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.repository.CategoryRepository;
 import com.example.reactivewebexample.common.dto.CreationDto;
@@ -137,6 +140,8 @@ class CategoryServiceTest {
 
         given(repository.findById(oid))
             .willReturn(Mono.just(testCategory));
+        given(repository.countAllChildrenByParentId(anyString()))
+            .willReturn(Mono.just(0L));
         given(repository.delete(testCategory))
             .willReturn(Mono.empty());
 
@@ -198,21 +203,57 @@ class CategoryServiceTest {
     @Test
     @DisplayName("카테고리를 모두 조회 할 수 있다.")
     void 카테고리를_모두_조회한다() {
-        List<Category> testCategories = List.of(new Category("example"),
-            new Category("example1"),
-            new Category("example2"),
-            new Category("example3"),
-            new Category("example4"),
-            new Category("example5"));
+        Category c = new Category("example");
+        Category c1 =new Category("example1");
+        Category c2 =new Category("example2");
+        Category c3 =new Category("example3");
+        Category c4 =new Category("example4");
+        Category c5 =new Category("example5");
+        Category c6 =new Category("example6");
+        Category c7 =new Category("example7");
+        Category c8 =new Category("example8");
+        ObjectId cOid = new ObjectId();
+        ObjectId c5Oid = new ObjectId();
+        ReflectionTestUtils.setField(c, "id", cOid);
+        ReflectionTestUtils.setField(c1, "id", new ObjectId());
+        ReflectionTestUtils.setField(c2, "id", new ObjectId());
+        ReflectionTestUtils.setField(c3, "id", new ObjectId());
+        ReflectionTestUtils.setField(c4, "id", new ObjectId());
+        ReflectionTestUtils.setField(c5, "id", c5Oid);
+        ReflectionTestUtils.setField(c6, "id", new ObjectId());
+        ReflectionTestUtils.setField(c7, "id", new ObjectId());
+        ReflectionTestUtils.setField(c8, "id", new ObjectId());
 
-        given(repository.findAll())
-            .willReturn(Flux.fromIterable(testCategories));
+        ReflectionTestUtils.setField(c1, "parentId", cOid);
+        ReflectionTestUtils.setField(c2, "parentId", cOid);
+        ReflectionTestUtils.setField(c3, "parentId", cOid);
+        ReflectionTestUtils.setField(c4, "parentId", cOid);
+        ReflectionTestUtils.setField(c6, "parentId", c5Oid);
+        ReflectionTestUtils.setField(c7, "parentId", c5Oid);
+        ReflectionTestUtils.setField(c8, "parentId", c5Oid);
 
-        Flux<Category> categoryFlux = service.retrieveCategories();
+        Categories categories = new Categories(c);
+        categories.addChildCategory(c1);
+        categories.addChildCategory(c2);
+        categories.addChildCategory(c3);
+        categories.addChildCategory(c4);
+        Categories categories2 = new Categories(c5);
+        categories2.addChildCategory(c6);
+        categories2.addChildCategory(c7);
+        categories2.addChildCategory(c8);
+
+        given(repository.findAll()).willReturn(Flux.just(c,c1,c2,c3,c4,c5,c6,c7,c8));
+
+        Mono<CategoryComposite> categoryFlux = service.retrieveCategories()
+            .log();
 
         StepVerifier.create(categoryFlux)
             .expectSubscription()
-            .expectNextCount(6)
+            .consumeNextWith(composite -> {
+                assertThat(composite.getCategoryComposite())
+                    .isNotEmpty()
+                    .hasSize(2);
+            })
             .verifyComplete();
 
         then(repository)

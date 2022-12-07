@@ -4,6 +4,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.example.reactivewebexample.category.dto.Categories;
+import com.example.reactivewebexample.category.dto.CategoryComposite;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -24,7 +26,6 @@ import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -126,19 +127,42 @@ class CategoryControllerTest {
     @Test
     @DisplayName("카테고리의 전체조회 요청을 받은 후 처리한다.")
     void 카테고리_전체조회_요청을_받는다() {
-        List<Category> categories = List.of(new Category("example"),
-            new Category("example1"),
-            new Category("example2"),
-            new Category("example3"),
-            new Category("example4"),
-            new Category("example5"));
+        Category c = new Category("example");
+        Category c1 =new Category("example1");
+        Category c2 =new Category("example2");
+        Category c3 =new Category("example3");
+        Category c4 =new Category("example4");
+        Category c5 =new Category("example5");
+        Category c6 =new Category("example6");
+        Category c7 =new Category("example7");
+        Category c8 =new Category("example8");
+        ObjectId cOid = new ObjectId();
+        ObjectId c1Oid = new ObjectId();
+        ReflectionTestUtils.setField(c, "id", cOid);
+        ReflectionTestUtils.setField(c1, "id", c1Oid);
+        ReflectionTestUtils.setField(c2, "id", new ObjectId());
+        ReflectionTestUtils.setField(c3, "id", new ObjectId());
+        ReflectionTestUtils.setField(c4, "id", new ObjectId());
+        ReflectionTestUtils.setField(c5, "id", new ObjectId());
+        ReflectionTestUtils.setField(c6, "id", new ObjectId());
+        ReflectionTestUtils.setField(c7, "id", new ObjectId());
+        ReflectionTestUtils.setField(c8, "id", new ObjectId());
+        Categories categories = new Categories(c);
+        categories.addChildCategory(c1);
+        categories.addChildCategory(c2);
+        categories.addChildCategory(c3);
+        categories.addChildCategory(c4);
+        Categories categories2 = new Categories(c5);
+        categories2.addChildCategory(c6);
+        categories2.addChildCategory(c7);
+        categories2.addChildCategory(c8);
 
-        Flux<Category> categoryFlux = Flux.fromIterable(categories);
+        CategoryComposite categoryComposite = new CategoryComposite();
 
-        given(service.retrieveCategories())
-            .willReturn(categoryFlux);
+        ReflectionTestUtils.setField(categoryComposite, "categoryComposite",
+            List.of(categories,categories2));
 
-        categories.forEach(category -> ReflectionTestUtils.setField(category, "id", new ObjectId()));
+        given(service.retrieveCategories()).willReturn(Mono.just(categoryComposite));
 
         WebTestClient.bindToController(controller)
             .build()
@@ -150,8 +174,10 @@ class CategoryControllerTest {
             .expectBody()
             .consumeWith(entityExchangeResult -> log.debug("body: {}", new String(entityExchangeResult.getResponseBody())))
             .jsonPath("$.content").isArray()
-            .jsonPath("$.content[0].name", "example").exists()
-            .jsonPath("$.content[0].links[0].href", "/api/categories/example").exists()
+            .jsonPath("$.content[0].category.name", "example").exists()
+            .jsonPath("$.content[0].category.links[0].href", "/api/categories" + cOid.toHexString()).exists()
+            .jsonPath("$.content[0].children[0].category.name", "example1").exists()
+            .jsonPath("$.content[0].children[0].category.links[0].href", "/api/categories" + c1Oid.toHexString()).exists()
             .jsonPath("$.links[0].href", "/api/categories").exists()
             .returnResult();
 

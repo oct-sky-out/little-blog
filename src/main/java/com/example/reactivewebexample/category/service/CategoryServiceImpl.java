@@ -1,19 +1,22 @@
 package com.example.reactivewebexample.category.service;
 
 import com.example.reactivewebexample.category.document.Category;
+import com.example.reactivewebexample.category.dto.Categories;
+import com.example.reactivewebexample.category.dto.CategoryComposite;
 import com.example.reactivewebexample.category.dto.CategorySaveDto;
 import com.example.reactivewebexample.category.repository.CategoryRepository;
 import com.example.reactivewebexample.common.dto.CreationDto;
 import com.example.reactivewebexample.common.dto.ModifyDto;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
@@ -77,8 +80,19 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional(readOnly = true)
     @Override
-    public Flux<Category> retrieveCategories() {
-        return categoryRepository.findAll();
+    public Mono<CategoryComposite> retrieveCategories() {
+        return categoryRepository.findAll()
+            .reduce(new CategoryComposite(), (composite, category) -> {
+                if(Objects.nonNull(category.getParentId())) {
+                    log.error("category name :{}", category.getName());
+                    log.error("composite status :{}", composite);
+                    composite.findParentCategory(category.getParentId())
+                        .ifPresent(categories -> categories.addChildCategory(category));
+                    return composite;
+                }
+                composite.addCategoryComposite(new Categories(category));
+                return composite;
+            });
     }
 
 }
