@@ -1,0 +1,61 @@
+package com.example.reactivewebexample.category.document;
+
+import com.example.reactivewebexample.base.document.BaseField;
+import com.example.reactivewebexample.base.util.BaseFieldFactory;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import lombok.Builder;
+import lombok.Getter;
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Getter
+@Document
+public class Category {
+    @Id
+    private ObjectId id;
+
+    private String name;
+
+    private BaseField baseField;
+
+    private ObjectId parentId;
+
+    @Builder
+    public Category(String name) {
+        this.name = name;
+        this.baseField = BaseFieldFactory.create();
+    }
+
+    public void addParent(Category patentId) {
+        if(this.equals(patentId)) {
+            throw new RuntimeException("같은 카테고리는 하위 카테고리로 만들 수 없습니다.");
+        }
+
+        this.parentId = parentId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Category category = (Category) o;
+        return Objects.equals(getId(), category.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        this.baseField.setUpdatedAt(LocalDateTime.now());
+        this.baseField.setVersion(this.baseField.getVersion() + 1);
+    }
+}

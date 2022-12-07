@@ -2,11 +2,18 @@ spring :
   profiles:
     active: dev
 
+  mongodb:
+    embedded:
+      version: "4.0.0"
+
 ---
 spring :
   config:
     activate:
       on-profile: dev
+
+  hateoas:
+    use-hal-as-default-json-media-type: true
 
 
 logging:
@@ -43,6 +50,12 @@ spring :
     ansi:
       enabled: always
 
+  hateoas:
+    use-hal-as-default-json-media-type: false
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
 logging:
   level:
     root: warn
@@ -57,10 +70,3 @@ logging:
   pattern:
     file: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
     console: '%d{yyyy-MM-dd HH:mm:ss} %clr([%thread]){magenta}  %clr(%5p) %logger{36} - %msg%n'
-
-#user:
-#  baseurl : 안알려줌
-#  port : 안알려줌
-#
-#mongodb :
-#  url : 안알려줌
