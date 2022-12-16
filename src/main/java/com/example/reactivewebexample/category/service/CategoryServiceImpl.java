@@ -29,11 +29,13 @@ public class CategoryServiceImpl implements CategoryService {
             Mono<Category> category = Mono.just(new Category(categoryName));
 
             if(Objects.nonNull(parentId)) {
-                categoryRepository.findById(new ObjectId(parentId))
+                return categoryRepository.findById(new ObjectId(parentId))
                     .switchIfEmpty(Mono.error(new RuntimeException("알 수 없는 카테고리입니다.")))
                     .zipWith(category)
-                    .subscribe(categoryTuple ->  // T1 - parent, T2 - child
-                        categoryTuple.getT2().addParent(categoryTuple.getT1()));
+                    .flatMap(categoryTuple -> { // T1 - parent, T2 - child
+                        categoryTuple.getT2().addParent(parentId);
+                        return Mono.just(categoryTuple.getT2());
+                    });
             }
 
             return category;

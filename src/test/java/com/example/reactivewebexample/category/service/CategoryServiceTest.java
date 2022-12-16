@@ -11,10 +11,10 @@ import com.example.reactivewebexample.category.document.Category;
 import com.example.reactivewebexample.category.dto.Categories;
 import com.example.reactivewebexample.category.dto.CategoryComposite;
 import com.example.reactivewebexample.category.dto.CategorySaveDto;
+import com.example.reactivewebexample.category.dto.HalCategories;
 import com.example.reactivewebexample.category.repository.CategoryRepository;
 import com.example.reactivewebexample.common.dto.CreationDto;
 import com.example.reactivewebexample.common.dto.ModifyDto;
-import java.util.List;
 import java.util.Objects;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
@@ -201,8 +202,34 @@ class CategoryServiceTest {
     }
 
     @Test
+    void 카테고리를_모두_조회한다1() {
+        Category c = new Category("example");
+        Category c1 =new Category("example1");
+        Category c2 =new Category("example2");
+        ReflectionTestUtils.setField(c, "id", new ObjectId());
+        ReflectionTestUtils.setField(c1, "id", new ObjectId());
+        ReflectionTestUtils.setField(c2, "id", new ObjectId());
+
+        given(repository.findAll()).willReturn(Flux.just(c,c1,c2));
+
+        Mono<CollectionModel<HalCategories>>
+            categoryFlux = service.retrieveCategories().flatMap(CategoryComposite::toHal)
+            .log();
+
+        StepVerifier.create(categoryFlux)
+            .expectSubscription()
+            .consumeNextWith(composite ->
+                assertThat(composite.getContent()).isNotEmpty().hasSize(3))
+            .verifyComplete();
+
+        then(repository)
+            .should()
+            .findAll();
+    }
+
+    @Test
     @DisplayName("카테고리를 모두 조회 할 수 있다.")
-    void 카테고리를_모두_조회한다() {
+    void 카테고리를_모두_조회한다2() {
         Category c = new Category("example");
         Category c1 =new Category("example1");
         Category c2 =new Category("example2");
@@ -244,16 +271,14 @@ class CategoryServiceTest {
 
         given(repository.findAll()).willReturn(Flux.just(c,c1,c2,c3,c4,c5,c6,c7,c8));
 
-        Mono<CategoryComposite> categoryFlux = service.retrieveCategories()
+        Mono<CollectionModel<HalCategories>>
+            categoryFlux = service.retrieveCategories().flatMap(CategoryComposite::toHal)
             .log();
 
         StepVerifier.create(categoryFlux)
             .expectSubscription()
-            .consumeNextWith(composite -> {
-                assertThat(composite.getCategoryComposite())
-                    .isNotEmpty()
-                    .hasSize(2);
-            })
+            .consumeNextWith(composite ->
+                assertThat(composite.getContent()).isNotEmpty().hasSize(2))
             .verifyComplete();
 
         then(repository)
