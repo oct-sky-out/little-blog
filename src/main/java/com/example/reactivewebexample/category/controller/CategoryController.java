@@ -30,38 +30,45 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping(value="/api/categories", produces = {MediaTypes.HAL_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(value = "/api/categories", produces = {MediaTypes.HAL_JSON_VALUE,
+    MediaType.APPLICATION_JSON_VALUE})
 @RequiredArgsConstructor
 public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<EntityModel<CreationDto>> createCategory(
-        @RequestBody @Valid CategorySaveDto body,
-        @RequestParam(value = "parentId", required = false) String parentId) {
-        CategoryController controller = methodOn(CategoryController.class);
-        Mono<Link> selfLink = linkTo(controller.createCategory(body, parentId)).slash(body.name())
-            .withSelfRel().toMono();
-        Mono<Link> updateLink = linkTo(controller.updateCategory(null, null)).slash(body.name())
-            .withSelfRel().toMono();
-        Mono<Link> deleteLink = linkTo(controller.createCategory(null, null)).slash(body.name())
-            .withSelfRel().toMono();
+    public Mono<EntityModel<CreationDto>> createCategory(@RequestBody @Valid CategorySaveDto body,
+                                                         @RequestParam(required = false)
+                                                         String parentId) {
         Mono<CreationDto> createdCategory = categoryService.addCategory(body.name(), parentId);
 
-        return Mono.zip(createdCategory, selfLink, updateLink, deleteLink)
-            .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2(), o.getT3(), o.getT4())));
+        return createdCategory.flatMap(category -> {
+            CategoryController controller = methodOn(CategoryController.class);
+            Mono<Link> selfLink =
+                linkTo(controller.createCategory(body, null)).slash(body.name()).withSelfRel()
+                    .toMono()
+                    .flatMap(link -> Mono.just(link.expand().withSelfRel()));
+            Mono<Link> updateLink =
+                linkTo(controller.updateCategory(category.id(), null)).withRel("update").toMono();
+            Mono<Link> deleteLink =
+                linkTo(controller.deleteCategory(category.id())).withRel("delete").toMono();
+
+            return Mono.zip(selfLink, updateLink, deleteLink).flatMap(tuple -> Mono.just(
+                EntityModel.of(category, tuple.getT1(), tuple.getT2(), tuple.getT3())));
+        });
     }
 
     @PutMapping("/{categoryId}")
-    public Mono<EntityModel<ModifyDto<CategorySaveDto>>> updateCategory(@PathVariable String categoryId,
-                                          @RequestBody @Valid CategorySaveDto body) {
+    public Mono<EntityModel<ModifyDto<CategorySaveDto>>> updateCategory(
+        @PathVariable String categoryId, @RequestBody @Valid CategorySaveDto body) {
         CategoryController controller = methodOn(CategoryController.class);
-        Mono<Link> selfLink = linkTo(controller.createCategory(body, null)).slash(body.name())
-            .withSelfRel().toMono();
+        Mono<Link> selfLink =
+            linkTo(controller.createCategory(body, null)).slash(body.name()).withSelfRel()
+                .toMono()
+                .flatMap(link -> Mono.just(link.expand().withSelfRel()));
 
-        return categoryService.updateCategory(categoryId, body.name())
-            .zipWith(selfLink)
+        return categoryService.updateCategory(categoryId, body.name()).zipWith(selfLink)
             .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2())));
     }
 
@@ -73,7 +80,6 @@ public class CategoryController {
 
     @GetMapping
     public Mono<CollectionModel<HalCategories>> retrieveAllCategories() {
-        return categoryService.retrieveCategories()
-            .flatMap(CategoryComposite::toHal);
+        return categoryService.retrieveCategories().flatMap(CategoryComposite::toHal);
     }
 }
