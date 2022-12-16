@@ -159,7 +159,7 @@ class CategoryControllerTest {
 
         CategoryComposite categoryComposite = new CategoryComposite();
 
-        ReflectionTestUtils.setField(categoryComposite, "categoryComposite",
+        ReflectionTestUtils.setField(categoryComposite, "composite",
             List.of(categories,categories2));
 
         given(service.retrieveCategories()).willReturn(Mono.just(categoryComposite));
