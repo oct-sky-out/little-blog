@@ -64,7 +64,9 @@ public class CategoryController {
         @PathVariable String categoryId, @RequestBody @Valid CategorySaveDto body) {
         CategoryController controller = methodOn(CategoryController.class);
         Mono<Link> selfLink =
-            linkTo(controller.createCategory(body, null)).slash(body.name()).withSelfRel().toMono();
+            linkTo(controller.createCategory(body, null)).slash(body.name()).withSelfRel()
+                .toMono()
+                .flatMap(link -> Mono.just(link.expand().withSelfRel()));
 
         return categoryService.updateCategory(categoryId, body.name()).zipWith(selfLink)
             .flatMap(o -> Mono.just(EntityModel.of(o.getT1(), o.getT2())));
