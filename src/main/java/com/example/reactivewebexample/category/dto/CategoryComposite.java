@@ -18,26 +18,26 @@ import reactor.core.publisher.Mono;
 @Getter
 @ToString
 public class CategoryComposite {
-    private final List<Categories> categoryComposite = new ArrayList<>();
+    private final List<Categories> composite = new ArrayList<>();
 
     public void addCategoryComposite(Categories categories) { // 부모 카테고리 추가
-        this.categoryComposite.add(categories);
+        this.composite.add(categories);
     }
 
     public Mono<CollectionModel<HalCategories>> toHal() {
         CategoryController controller = methodOn(CategoryController.class);
-        return Flux.fromIterable(this.categoryComposite)
+        return Flux.fromIterable(this.composite)
             .flatMap(categories ->
-                Mono.zip(categories.parseCategoryHal(categories),
+                Mono.zipDelayError(categories.parseCategoryHal(categories),
                     categories.parseChildrenHal(categories))
-                .flatMap(tuple -> Mono.just(new HalCategories(tuple.getT1(), tuple.getT2()))))
+                .flatMap(tuple -> Mono.just(new HalCategories(tuple.getT1(), tuple.getT2().orElse(null)))))
             .collectList()
             .zipWith(linkTo(controller.retrieveAllCategories()).withSelfRel().toMono())
             .flatMap(o -> Mono.just(CollectionModel.of(o.getT1(), o.getT2())));
     }
 
     public Optional<Categories> findParentCategory(ObjectId parentId) {
-        return categoryComposite.stream()
+        return composite.stream()
             .map(categories -> findParentCategory(parentId, categories))
             .findAny()
             .orElseThrow(RuntimeException::new);
