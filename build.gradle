@@ -52,6 +52,21 @@ tasks.named('test') {
 }
 
 bootBuildImage {
-	imageName = "blog_app"
-}
+	if (!project.hasProperty("baseurl") && !project.hasProperty("port") && !project.hasProperty("mongoUrl")) {
+		ext.baseurl = "http://localhost/"
+		ext.port = "8080"
+		ext.mongoUrl = "http://localhost:27017/"
+	}
 
+	imageName = "blog_app"
+	environment = [
+			"BPE_DELIM_JAVA_TOOL_OPTIONS" : " ",
+			"BPE_APPEND_JAVA_TOOL_OPTIONS" :
+					"-Duser.baseurl=" + "${baseurl}" + " " +
+							"-Duser.port=" + "${port}" + " " +
+							"-Dmongodb.url=" + "${mongoUrl}" + " " +
+							"-XX:ActiveProcessorCount=1 -XX:+HeapDumpOnOutOfMemoryError " +
+							"-Xms50M -Xmx50M",
+			"BPE_APPEND_BPL_HEAP_DUMP_PATH" :  "/workspace/heap_dump"
+	]
+}
