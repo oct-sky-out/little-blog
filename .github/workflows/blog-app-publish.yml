@@ -90,7 +90,7 @@ jobs:
         key: ${{ secrets.BLOG_SSH_KEY }}
         port: ${{ secrets.BLOG_SSH_PORT }}
         script_stop: true
-        script: ./bootstrap_blog_app_container.sh
+        script: ./bootstrap_blog_app_container.sh ${{ steps.extract_version_name.outputs.version }}
 
     - name : overwirte before version file
       uses: appleboy/ssh-action@master
